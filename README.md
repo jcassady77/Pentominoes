@@ -3,14 +3,12 @@
 
 Todo
     
-    
-    Multiple Pentominoes at a time
-    
     Collision detection
+    Camera movement overhaul - 
     Toggle Selected Pentomino w mouse
     Pentomino spawn pipeline
     completion detection
-    Camera movement overhaul - 
+    
     
 Controls
 

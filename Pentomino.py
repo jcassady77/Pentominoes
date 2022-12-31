@@ -33,5 +33,5 @@ class Pentomino:
         cubeArray = []
         for cubeLocation in self.objectMatrix:
             Pentomino.renderCube(self, pentominoesInstance, cubeLocation, cubeArray, objectNode)
-        pentominoesInstance.renderedObjects[self.objectId] = cubeArray
+        pentominoesInstance.renderedCubes[self.objectId] = cubeArray
         return objectNode

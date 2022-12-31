@@ -24,8 +24,15 @@ class Pentominoes(ShowBase):
         self.selectedNodePos.addZ(1)
     def moveSelectedObjectZneg(self):
         self.selectedNodePos.addZ(-1)
-        
+
     def cycleSelectedObject(self):
+        self.selectedNode.clearColorScale()
+        if (len(self.renderedPentominoNodes) <= (self.selectedNodeArrayIndex+1)):
+            self.selectedNodeArrayIndex = 0
+        else:
+            self.selectedNodeArrayIndex = self.selectedNodeArrayIndex + 1
+        self.selectedNode = self.renderedPentominoNodes[self.selectedNodeArrayIndex]
+        self.selectedNodePos = self.selectedNode.getPos()
         self.selectedNode.setColorScale(100, 1, 1, 1)
 
     def moveCameraRotateUp(self):
@@ -56,12 +63,14 @@ class Pentominoes(ShowBase):
 
         base.setBackgroundColor(0.0, 0.0, 0.0, 0.0)
 
-        self.renderedObjects = {}
+        self.renderedCubes = {}
+        self.renderedPentominoNodes = []
         
         Pentominoes.initLighting(self)
         self.renderOrigin()
 
         #x y z i j k
+        self.selectedNodeArrayIndex = 0
         self.selectedNodePos = LVecBase3()
         self.selectedNodeOrient = LVecBase3()
 
@@ -69,10 +78,12 @@ class Pentominoes(ShowBase):
         self.cameraOrient = LVecBase3(180,-10,0)
  
         Pentomino0 = Pentomino("0")
-        self.selectedNode = Pentomino0.renderPentomino(self)
+        Pentomino1 = Pentomino("1")
+        self.renderPentominoWrapper(Pentomino0)
+        self.renderPentominoWrapper(Pentomino1)
 
-        self.accept('w', self.moveSelectedObjectYpos)
-        self.accept('s', self.moveSelectedObjectYneg)
+        self.accept('w', self.moveSelectedObjectYneg)
+        self.accept('s', self.moveSelectedObjectYpos)
         self.accept('a', self.moveSelectedObjectXpos)
         self.accept('d', self.moveSelectedObjectXneg)
         self.accept('e', self.moveSelectedObjectZpos)
@@ -128,6 +139,11 @@ class Pentominoes(ShowBase):
         self.origin.reparentTo(self.render)
         self.origin.setScale(1, 1, 1)
         self.origin.setPos(0, 0, 0)
+
+    def renderPentominoWrapper(self, pentomino):
+        renderedPentominoNode = pentomino.renderPentomino(self)
+        self.selectedNode = renderedPentominoNode
+        self.renderedPentominoNodes.append(renderedPentominoNode)
 
     # Define a procedure to move the camera.
     def updateCameraTask(self, task):
