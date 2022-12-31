@@ -77,8 +77,9 @@ class Pentominoes(ShowBase):
         self.cameraPos = LVecBase3(5,50,20)
         self.cameraOrient = LVecBase3(180,-10,0)
  
-        Pentomino0 = Pentomino("0")
-        Pentomino1 = Pentomino("1")
+        Pentomino0 = Pentomino("26")
+        print(Pentomino0.objectMatrix)
+        Pentomino1 = Pentomino("27")
         self.renderPentominoWrapper(Pentomino0)
         self.renderPentominoWrapper(Pentomino1)
 
