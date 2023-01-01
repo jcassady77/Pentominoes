@@ -30,12 +30,27 @@ class Pentominoes(ShowBase):
 
         self.selectedPentomino = None
  
-        Pentomino0 = Pentomino("26", self)
-        Pentomino1 = Pentomino("27", self)
+        Pentomino0 = Pentomino("1", self)
+        Pentomino1 = Pentomino("2", self)
+        Pentomino2 = Pentomino("3", self)
+
+        Pentomino1.position.x = 2
+        Pentomino1.position.y = 2
+        Pentomino1.position.z = 2
+
+        Pentomino2.position.x = 4
+        Pentomino2.position.y = 4
+        Pentomino2.position.z = 4
+
         Pentomino0.renderPentomino(self)
         Pentomino1.renderPentomino(self)
+        Pentomino2.renderPentomino(self)
 
+        self.updateAllPentominoPos()
+
+        #init selected pentominoes
         self.selectedPentomino = self.pentominoes[0]
+        self.selectedPentomino.node.setColorScale(100, 1, 1, 1)
 
         #Object movement
             #Translation
@@ -80,54 +95,77 @@ class Pentominoes(ShowBase):
         self.taskMgr.add(self.updateCameraTask, "updateCameraTask")
         self.taskMgr.add(self.updateSelectedObjectPosTask, "updateSelectedObjectPosTask")
 
+    def moveSelectedObjectXpos(self):
+        self.checkCollisionHandler("position.addX", 2)
+    def moveSelectedObjectXneg(self):
+        self.checkCollisionHandler("position.addX", -2)
     def moveSelectedObjectYpos(self):
-        proposedSelectedPentomino = Pentomino(self.selectedPentomino.objectId, self)
-        proposedSelectedPentomino.position = self.selectedPentomino.position
-        proposedSelectedPentomino.orientation = self.selectedPentomino.orientation
-        proposedSelectedPentomino.position.addY(1)
+        self.checkCollisionHandler("position.addY", 2)
+    def moveSelectedObjectYneg(self):
+        self.checkCollisionHandler("position.addY", -2)
+    def moveSelectedObjectZpos(self):
+        self.checkCollisionHandler("position.addZ", 2)
+    def moveSelectedObjectZneg(self):
+        self.checkCollisionHandler("position.addZ", -2)
+
+    def rotSelectedObjectXpos(self):
+        self.checkCollisionHandler("orientation.addX", 90)
+    def rotSelectedObjectXneg(self):
+        self.checkCollisionHandler("orientation.addX", -90)
+    def rotSelectedObjectYpos(self):
+        self.checkCollisionHandler("orientation.addY", 90)
+    def rotSelectedObjectYneg(self):
+        self.checkCollisionHandler("orientation.addY", -90)
+    def rotSelectedObjectZpos(self):
+        self.checkCollisionHandler("orientation.addZ", 90)
+    def rotSelectedObjectZneg(self):
+        self.checkCollisionHandler("orientation.addZ", -90)
+
+    def checkCollisionHandler(self, movementType, delta):
+        proposedSelectedPentomino = Pentomino(self.selectedPentomino.objectId, self, False)
+        proposedSelectedPentomino.position = LVecBase3(self.selectedPentomino.position)
+        proposedSelectedPentomino.orientation = LVecBase3(self.selectedPentomino.orientation)
+        self.movePentominoHandler(proposedSelectedPentomino, movementType, delta)
         proposedSelectedPentomino.renderPentomino(self)
         proposedSelectedPentomino.node.setPosHpr(proposedSelectedPentomino.position, proposedSelectedPentomino.orientation)
         if (self.checkCollision(proposedSelectedPentomino)):
-            self.selectedPentominoPos.addY(1)
+            self.movePentominoHandler(self.selectedPentomino, movementType, delta)
         else:
             #do something to show the user there is a collision
-            print("collision")
+            pass
         proposedSelectedPentomino.delPentomino(self)
-    def moveSelectedObjectYneg(self):
-        self.selectedPentomino.position.addY(-1)
-    def moveSelectedObjectXpos(self):
-        self.selectedPentomino.position.addX(1)
-    def moveSelectedObjectXneg(self):
-        self.selectedPentomino.position.addX(-1)
-    def moveSelectedObjectZpos(self):
-        self.selectedPentomino.position.addZ(1)
-    def moveSelectedObjectZneg(self):
-        self.selectedPentomino.position.addZ(-1)
 
-    def rotSelectedObjectYpos(self):
-        self.selectedPentomino.orientation.addY(90)
-    def rotSelectedObjectYneg(self):
-        self.selectedPentomino.orientation.addY(-90)
-    def rotSelectedObjectXpos(self):
-        self.selectedPentomino.orientation.addX(90)
-    def rotSelectedObjectXneg(self):
-        self.selectedPentomino.orientation.addX(-90)
-    def rotSelectedObjectZpos(self):
-        self.selectedPentomino.orientation.addZ(90)
-    def rotSelectedObjectZneg(self):
-        self.selectedPentomino.orientation.addZ(-90)
+    def movePentominoHandler(self, pentomino, movementType, delta):
+        match movementType:
+            case "position.addX":
+                pentomino.position.addX(delta)
+            case "position.addY":
+                pentomino.position.addY(delta)
+            case "position.addZ":
+                pentomino.position.addZ(delta)
+            case "orientation.addX":
+                pentomino.orientation.addX(delta)
+            case "orientation.addY":
+                pentomino.orientation.addY(delta)
+            case "orientation.addZ":
+                pentomino.orientation.addZ(delta)
 
     def checkCollision(self, proposedSelectedPentomino):
         #Should return True if there are NO collisions
         absolutePositions = set()
         for pentomino in self.pentominoes:
-            print(pentomino)
             if (pentomino == self.selectedPentomino): #If "node" is the selected node
-                for cube in proposedSelectedPentomino.node.getChildren():
-                    absolutePositions.add(cube.getPos(self.render))
                 continue
             for cube in pentomino.node.getChildren():
-                absolutePositions.add(cube.getPos(self.render))
+                absolutePositions.add((\
+                    round(cube.getPos(self.render).x), \
+                    round(cube.getPos(self.render).y), \
+                    round(cube.getPos(self.render).z)))
+        for cube in proposedSelectedPentomino.node.getChildren():
+            absolutePositions.add((\
+                    round(cube.getPos(self.render).x), \
+                    round(cube.getPos(self.render).y), \
+                    round(cube.getPos(self.render).z)))
         if (len(absolutePositions) < len(self.pentominoes)*5):
             return False
         return True
@@ -205,8 +243,20 @@ class Pentominoes(ShowBase):
 
     def updateSelectedObjectPosTask(self, task):
         if None != self.selectedPentomino:
+            self.selectedPentomino.position.x = round(self.selectedPentomino.position.x)
+            self.selectedPentomino.position.y = round(self.selectedPentomino.position.y)
+            self.selectedPentomino.position.z = round(self.selectedPentomino.position.z)
+
+            self.selectedPentomino.orientation.x = round(self.selectedPentomino.orientation.x)
+            self.selectedPentomino.orientation.y = round(self.selectedPentomino.orientation.y)
+            self.selectedPentomino.orientation.z = round(self.selectedPentomino.orientation.z)
+
             self.selectedPentomino.node.setPosHpr(self.selectedPentomino.position, self.selectedPentomino.orientation)
         return Task.cont
+
+    def updateAllPentominoPos(self):
+        for pentomino in self.pentominoes:
+            pentomino.node.setPosHpr(pentomino.position, pentomino.orientation)
 
 
 pentominoesInstance = Pentominoes()

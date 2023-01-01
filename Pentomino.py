@@ -7,16 +7,18 @@ class Pentomino:
     #Parse JSON for object data (static)
     pentominoFile = open("./pentominoData.json")
     pentominoData = json.load(pentominoFile)
-    def __init__(self, objectId, pentominoesInstance):
+    def __init__(self, objectId, pentominoesInstance, addToPentominoesList=True):
         #set 3d object matrix
         self.objectId = objectId
         self.objectMatrix = Pentomino.pentominoData.get("pentominoObjectMatrixData").get(objectId)
         self.position = LVecBase3()
         self.orientation = LVecBase3()
-        pentominoesInstance.pentominoes.append(self)
+        if (addToPentominoesList):
+            pentominoesInstance.pentominoes.append(self)
 
     def delPentomino(self, pentominoesInstance):
-        pentominoesInstance.pentominoes.remove(self)
+        if (self in pentominoesInstance.pentominoes):
+            pentominoesInstance.pentominoes.remove(self)
         for cube in self.node.getChildren():
             cube.removeNode()
         self.node.removeNode()
