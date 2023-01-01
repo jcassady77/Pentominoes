@@ -1,18 +1,31 @@
 
 import json
+from panda3d.core import LVecBase3
 
 #Class for one specific pentomino object
 class Pentomino:
     #Parse JSON for object data (static)
     pentominoFile = open("./pentominoData.json")
     pentominoData = json.load(pentominoFile)
-    def __init__(self, objectId):
+    def __init__(self, objectId, pentominoesInstance):
         #set 3d object matrix
         self.objectId = objectId
         self.objectMatrix = Pentomino.pentominoData.get("pentominoObjectMatrixData").get(objectId)
-        self.orientation = [0,0,1]
+        self.position = LVecBase3()
+        self.orientation = LVecBase3()
+        pentominoesInstance.pentominoes.append(self)
+
+    def delPentomino(self, pentominoesInstance):
+        pentominoesInstance.pentominoes.remove(self)
+        for cube in self.node.getChildren():
+            cube.removeNode()
+        self.node.removeNode()
+        del self.objectId
+        del self.objectMatrix
+        del self.position
+        del self.orientation
     
-    def renderCube(self, pentominoesInstance, pos, cubeArray, parentNode):
+    def renderCube(self, pentominoesInstance, pos, parentNode):
         # Load the environment model.
         distanceScale = 2
         distanceOffset = 1
@@ -25,13 +38,10 @@ class Pentomino:
             distanceScale*pos[0]+distanceOffset, \
             distanceScale*pos[1]+distanceOffset, \
             distanceScale*pos[2]+distanceOffset)
-        cubeArray.append(newCube)
 
     def renderPentomino(self, pentominoesInstance):
         #Render a specific pentomino Object
-        objectNode = pentominoesInstance.render.attachNewNode(self.objectId)
-        cubeArray = []
+        self.node = pentominoesInstance.render.attachNewNode(self.objectId)
         for cubeLocation in self.objectMatrix:
-            Pentomino.renderCube(self, pentominoesInstance, cubeLocation, cubeArray, objectNode)
-        #pentominoesInstance.renderedCubes[self.objectId] = cubeArray
-        return objectNode
+            Pentomino.renderCube(self, pentominoesInstance, cubeLocation, self.node)
+    

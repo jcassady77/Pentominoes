@@ -19,24 +19,23 @@ class Pentominoes(ShowBase):
         base.setBackgroundColor(0.0, 0.0, 0.0, 0.0)
 
         #self.renderedCubes = {}
-        self.renderedPentominoNodes = []
+        self.pentominoes = []
         
         Pentominoes.initLighting(self)
         self.renderOrigin()
 
         #x y z i j k
-        self.selectedNodeArrayIndex = 0
-        self.selectedNodePos = LVecBase3()
-        self.selectedNodeOrient = LVecBase3()
-
         self.cameraPos = LVecBase3(5,50,20)
         self.cameraOrient = LVecBase3(180,-10,0)
+
+        self.selectedPentomino = None
  
-        Pentomino0 = Pentomino("26")
-        print(Pentomino0.objectMatrix)
-        Pentomino1 = Pentomino("27")
-        self.renderPentominoWrapper(Pentomino0)
-        self.renderPentominoWrapper(Pentomino1)
+        Pentomino0 = Pentomino("26", self)
+        Pentomino1 = Pentomino("27", self)
+        Pentomino0.renderPentomino(self)
+        Pentomino1.renderPentomino(self)
+
+        self.selectedPentomino = self.pentominoes[0]
 
         #Object movement
             #Translation
@@ -82,60 +81,72 @@ class Pentominoes(ShowBase):
         self.taskMgr.add(self.updateSelectedObjectPosTask, "updateSelectedObjectPosTask")
 
     def moveSelectedObjectYpos(self):
-        self.selectedNodePos.addY(1)
-        self.checkCollision(self.selectedNodePos)
+        proposedSelectedPentomino = Pentomino(self.selectedPentomino.objectId, self)
+        proposedSelectedPentomino.position = self.selectedPentomino.position
+        proposedSelectedPentomino.orientation = self.selectedPentomino.orientation
+        proposedSelectedPentomino.position.addY(1)
+        proposedSelectedPentomino.renderPentomino(self)
+        proposedSelectedPentomino.node.setPosHpr(proposedSelectedPentomino.position, proposedSelectedPentomino.orientation)
+        if (self.checkCollision(proposedSelectedPentomino)):
+            self.selectedPentominoPos.addY(1)
+        else:
+            #do something to show the user there is a collision
+            print("collision")
+        proposedSelectedPentomino.delPentomino(self)
     def moveSelectedObjectYneg(self):
-        self.selectedNodePos.addY(-1)
+        self.selectedPentomino.position.addY(-1)
     def moveSelectedObjectXpos(self):
-        self.selectedNodePos.addX(1)
+        self.selectedPentomino.position.addX(1)
     def moveSelectedObjectXneg(self):
-        self.selectedNodePos.addX(-1)
+        self.selectedPentomino.position.addX(-1)
     def moveSelectedObjectZpos(self):
-        self.selectedNodePos.addZ(1)
+        self.selectedPentomino.position.addZ(1)
     def moveSelectedObjectZneg(self):
-        self.selectedNodePos.addZ(-1)
+        self.selectedPentomino.position.addZ(-1)
 
     def rotSelectedObjectYpos(self):
-        self.selectedNodeOrient.addY(90)
+        self.selectedPentomino.orientation.addY(90)
     def rotSelectedObjectYneg(self):
-        self.selectedNodeOrient.addY(-90)
+        self.selectedPentomino.orientation.addY(-90)
     def rotSelectedObjectXpos(self):
-        self.selectedNodeOrient.addX(90)
+        self.selectedPentomino.orientation.addX(90)
     def rotSelectedObjectXneg(self):
-        self.selectedNodeOrient.addX(-90)
+        self.selectedPentomino.orientation.addX(-90)
     def rotSelectedObjectZpos(self):
-        self.selectedNodeOrient.addZ(90)
+        self.selectedPentomino.orientation.addZ(90)
     def rotSelectedObjectZneg(self):
-        self.selectedNodeOrient.addZ(-90)
+        self.selectedPentomino.orientation.addZ(-90)
 
-    def checkCollision(self, proposedSelectedNodePos):
-        for node in self.renderedPentominoNodes:
-            if (node == self.selectedNode):
-                print("found selected node")
-            print("nodePos")
-            print(node.getPos())
-            print("nodeOrient")
-            print(node.getHpr())
-            print()
-            for cube in node.getChildren():
-                print(cube.getPos())
-        # print()
-        # for pentominoCubeArray in self.renderedCubes:
-        #     for cube in self.renderedCubes[pentominoCubeArray]:
-        #         print(cube.getPos())
-        print()
-        print()
-        print()
+    def checkCollision(self, proposedSelectedPentomino):
+        #Should return True if there are NO collisions
+        absolutePositions = set()
+        for pentomino in self.pentominoes:
+            print(pentomino)
+            if (pentomino == self.selectedPentomino): #If "node" is the selected node
+                for cube in proposedSelectedPentomino.node.getChildren():
+                    absolutePositions.add(cube.getPos(self.render))
+                continue
+            for cube in pentomino.node.getChildren():
+                absolutePositions.add(cube.getPos(self.render))
+        if (len(absolutePositions) < len(self.pentominoes)*5):
+            return False
+        return True
 
-    def cycleSelectedObject(self):
-        self.selectedNode.clearColorScale()
-        if (len(self.renderedPentominoNodes) <= (self.selectedNodeArrayIndex+1)):
-            self.selectedNodeArrayIndex = 0
+    def getAbsolutePositionOfCube(self, parentNodePos, parentNodeOrient, cubePos):
+        # if (getHpr().x == -90 or 270):
+        #             PentominoTrans = LPoint3f().y 
+        return
+
+    def cycleSelectedObject(self): #currently can cycle through unrendered pentomimoes
+        selectedPentominoArrayIndex = self.pentominoes.index(self.selectedPentomino)
+        self.selectedPentomino.node.clearColorScale()
+        if (len(self.pentominoes) <= (selectedPentominoArrayIndex+1)):
+            selectedPentominoArrayIndex = 0
         else:
-            self.selectedNodeArrayIndex = self.selectedNodeArrayIndex + 1
-        self.selectedNode = self.renderedPentominoNodes[self.selectedNodeArrayIndex]
-        self.selectedNodePos = self.selectedNode.getPos()
-        self.selectedNode.setColorScale(100, 1, 1, 1)
+            selectedPentominoArrayIndex = selectedPentominoArrayIndex + 1
+        self.selectedPentomino = self.pentominoes[selectedPentominoArrayIndex]
+        self.selectedPentomino.node.setColorScale(100, 1, 1, 1)
+
 
     def moveCameraRotateUp(self):
         self.cameraOrient.setY(self.cameraOrient.y + 2)
@@ -186,11 +197,6 @@ class Pentominoes(ShowBase):
         self.origin.setScale(1, 1, 1)
         self.origin.setPos(0, 0, 0)
 
-    def renderPentominoWrapper(self, pentomino):
-        renderedPentominoNode = pentomino.renderPentomino(self)
-        self.selectedNode = renderedPentominoNode
-        self.renderedPentominoNodes.append(renderedPentominoNode)
-
     # Define a procedure to move the camera.
     def updateCameraTask(self, task):
         self.camera.setPos(self.cameraPos)
@@ -198,7 +204,8 @@ class Pentominoes(ShowBase):
         return Task.cont
 
     def updateSelectedObjectPosTask(self, task):
-        self.selectedNode.setPosHpr(self.selectedNodePos, self.selectedNodeOrient)
+        if None != self.selectedPentomino:
+            self.selectedPentomino.node.setPosHpr(self.selectedPentomino.position, self.selectedPentomino.orientation)
         return Task.cont
 
 
